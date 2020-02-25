@@ -22,7 +22,7 @@ def button_callback(channel):
     time.sleep(0.3)
     if(not recording):
         print("Started recording")
-        camera.start_recording('/home/pi/camera/videos/video%s.h264' % i) # Maybe change to .bgr extension
+        camera.start_recording('/home/pi/camera/videos/video%s.mjpeg' % i) # Maybe change to .bgr extension
         recording = True
     else:
         print("Stopped recording")
