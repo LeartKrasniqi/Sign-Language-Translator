@@ -7,6 +7,7 @@ import RPi.GPIO as GPIO
 from picamera import PiCamera
 import speech_recognition as sr
 from PIL import Image
+import PIL.ImageOps
 import ST7735 as TFT
 
 import Adafruit_GPIO as AGPIO
@@ -24,19 +25,19 @@ disp = False
 
 # Runs when video button is pressed
 def video_button_callback(channel):
-    global recording 
+    global video_recording 
     time.sleep(0.3)
     filename = "v.mjpeg"
-    if(not recording):
+    if(not video_recording):
         print("video recording...\n")
         camera.start_recording("./videos/" + filename)
-        recording = True
+        video_recording = True
     else:
         print("video finished recording...\n")
         camera.stop_recording()
         # Add stuff to send the video and wait for response from app
         sendVideo(filename)
-        recording = False
+        video_recording = False
 
 
 # Runs when mic button is pressed
@@ -79,7 +80,8 @@ def speechRecognition(outfile):
             for c in letters:
                 if c in alphabet: 
                     im = Image.open("./letters/" + c.upper() + ".png")
-                    im = im.resize((disp_width, disp_height))
+                    im = im.transpose(Image.FLIP_LEFT_RIGHT).resize((disp_width, disp_height))
+                    im = PIL.ImageOps.invert(im)
                     disp.display(im)
                 time.sleep(2)
                 disp.clear()
@@ -127,6 +129,9 @@ if __name__=="__main__":
                     max_speed_hz = SPEED_HZ))
 
     disp.begin()
+    disp.clear()
+    disp.display()
+    disp.end()
 
     ###########################
     #   Camera Button Setup   #
@@ -134,15 +139,16 @@ if __name__=="__main__":
     camera = PiCamera()
     camera.rotation = 180
     video_recording = False
-    video_pin = 10
+    video_pin = 18
     GPIO.setup(video_pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-    GPIO.add_event_detect(video_pin, GPIO.FALLING, callback = video_button_callback, bouncetime = 300)
+    GPIO.add_event_detect(video_pin, GPIO.FALLING, callback = video_button_callback, bouncetime = 1000)
 
     ########################
     #   Mic button Setup   #
     ########################
     recognizer = sr.Recognizer()
     alphabet = "abcdefghijklmnopqrstuvwxyz"
+    mic_recording = False
     mic_pin = 17
     GPIO.setup(mic_pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
     GPIO.add_event_detect(mic_pin, GPIO.FALLING, callback = mic_button_callback, bouncetime = 1000)

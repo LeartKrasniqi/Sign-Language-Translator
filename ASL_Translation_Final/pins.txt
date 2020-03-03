@@ -1,0 +1,17 @@
+# Pin numberings so we don't go crazy
+
+DISPLAY
+Name:		Pi Pin (Physical / BCM):
+Vin		2
+Gnd		6
+SCK		23 / 11 (SCLK)
+SI		19 / 20 (MOSI)
+TCS 		24 / 8 (CE0)
+RST 		35 / 19 (MISO)
+D/C		37 / 26
+
+
+BUTTONS
+Name:		Pi Pin (Physical / BCM):
+Camera		12 / 18
+Mic		11 / 17

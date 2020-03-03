@@ -1,4 +1,5 @@
 from PIL import Image
+import PIL.ImageOps
 import ST7735 as TFT
 import Adafruit_GPIO as AGPIO
 import Adafruit_GPIO.SPI as SPI
@@ -30,7 +31,8 @@ test = "abcdef_ghijklmnop_qrs!_tuvwxyz"
 for c in test:
     if c in alphabet:
         im = Image.open("../letters/" + c.upper() + ".png")
-        im = im.resize((disp_width, disp_height))
+        im = im.transpose(Image.FLIP_TOP_BOTTOM).rotate(90).resize((disp_width, disp_height))
+        im = PIL.ImageOps.invert(im)
         disp.display(im)
         time.sleep(2)
         disp.display()
