@@ -42,13 +42,13 @@ def video_button_callback(channel):
         # imagePath = './videos/image_capture.jpg'
         # camera.capture(imagePath)
         
-        # os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="<add your credentials path>"
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="~/CODE/secrets/credentials.json"
         # firebase = firebase.FirebaseApplication('<your firebase database path>')
-        # client = storage.Client()
-        # bucket = client.get_bucket('<your firebase storage path>')
-        
-        # # posting to firebase storage
-        # imageBlob = bucket.blob("/")
+        client = storage.Client()
+        bucket = client.bucket('slab-asl-testing')
+       
+        # posting to firebase storage
+        imageBlob = bucket.blob("test_blob")
         
         # # imagePath = [os.path.join(self.path,f) for f in os.listdir(self.path)]
         # # imagePath = "<local_path>/image.png"
@@ -145,6 +145,9 @@ def sendVideo(f):
     blob.upload_from_filename(filename = "./videos/" + f)
 
 if __name__=="__main__":
+    
+    print("Starting run.py...\n")
+
     ###################
     #   Board Setup   #
     ###################
