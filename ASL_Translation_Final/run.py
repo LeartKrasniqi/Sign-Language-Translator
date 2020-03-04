@@ -3,19 +3,28 @@
 # This script runs the code for our senior project
 # [Extended Explanation]
 
-import RPi.GPIO as GPIO
-from picamera import PiCamera
-import speech_recognition as sr
-from PIL import Image
+import os
+import subprocess
+import sys
+import time
+import wave
+
 import PIL.ImageOps
-import ST7735 as TFT
+import pyaudio
+import speech_recognition as sr
+from google.cloud import storage
+from PIL import Image
 
 import Adafruit_GPIO as AGPIO
 import Adafruit_GPIO.SPI as SPI
-import time, sys, pyaudio, wave, os, subprocess
+import bluetooth
+import RPi.GPIO as GPIO
+import ST7735 as TFT
+from firebase import firebase
+from picamera import PiCamera
 
 sys.path.append(os.path.realpath(__file__))
-recording = False
+video_recording = False
 mic_recording = False
 disp = False
 
@@ -29,6 +38,24 @@ def video_button_callback(channel):
     time.sleep(0.3)
     filename = "v.mjpeg"
     if(not video_recording):
+        # uncomment for single snapshot
+        # imagePath = './videos/image_capture.jpg'
+        # camera.capture(imagePath)
+        
+        # os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="<add your credentials path>"
+        # firebase = firebase.FirebaseApplication('<your firebase database path>')
+        # client = storage.Client()
+        # bucket = client.get_bucket('<your firebase storage path>')
+        
+        # # posting to firebase storage
+        # imageBlob = bucket.blob("/")
+        
+        # # imagePath = [os.path.join(self.path,f) for f in os.listdir(self.path)]
+        # # imagePath = "<local_path>/image.png"
+        # imageBlob = bucket.blob("<image_name>")
+        # imageBlob.upload_from_filename(imagePath)
+        
+        # video
         print("video recording...\n")
         camera.start_recording("./videos/" + filename)
         video_recording = True
@@ -43,7 +70,7 @@ def video_button_callback(channel):
 # Runs when mic button is pressed
 def mic_button_callback(channel):
     global mic_recording
-    OUTFILE = "audio.wav"
+    OUTFILE = "./audio/audio.wav"
     time.sleep(0.3)
 
     if(not mic_recording):
@@ -68,25 +95,44 @@ def speechRecognition(outfile):
     global disp
     disp_width = 128
     disp_height = 128
-    speech = sr.AudioFile("./audio/" + outfile)
+    speech = sr.AudioFile(outfile)
+    
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    words_dict = ["goodbye","hello","no","please","sorry","thanks","yes","you're welcome"]
     try:
         with speech as source:
             recognizer.adjust_for_ambient_noise(source)
             audio = recognizer.record(source, offset = 0)
-            letters = recognizer.recognize_google(audio)
-            letter = letters.split()
+            # list of recognized words in list
+            recog_words = recognizer.recognize_google(audio).lower().split(",!? ")
 
-            # Display the correct image
-            for c in letters:
-                if c in alphabet: 
-                    im = Image.open("./letters/" + c.upper() + ".png")
+            for recognized_word in recog_words:
+                # word check
+                # check if recognized word matches any word in our dictionary
+                if any(recognized_word in wd for wd in words_dict):
+                    print("displaying gesture for word: ", recognized_word)
+                    
+                    # display gesture for that word
+                    im = Image.open("./words/" + recognized_word + "jpg")
                     im = im.transpose(Image.FLIP_LEFT_RIGHT).resize((disp_width, disp_height))
                     im = PIL.ImageOps.invert(im)
                     disp.display(im)
-                time.sleep(2)
-                disp.clear()
-    except:
-        # Error occurred, maybe let user know?
+                    time.sleep(2)
+                    disp.clear()
+                # else, move onto fingerspelling mode
+                else:
+                    print("fingerspelling for: ", recognized_word)
+                    for letter in recognized_word:
+                        # display image if letter is an alphabet
+                        if letter in alphabet: 
+                            im = Image.open("./letters/" + letter + ".png")
+                            im = im.transpose(Image.FLIP_LEFT_RIGHT).resize((disp_width, disp_height))
+                            im = PIL.ImageOps.invert(im)
+                            disp.display(im)
+                        time.sleep(2)
+                        disp.clear()
+    except Exception as e:
+        print("Exception found! {}: {}".format(type(e), e.message))
         mic_recording = False
 
 
@@ -99,7 +145,6 @@ def sendVideo(f):
     blob.upload_from_filename(filename = "./videos/" + f)
 
 if __name__=="__main__":
-
     ###################
     #   Board Setup   #
     ###################
@@ -147,35 +192,39 @@ if __name__=="__main__":
     #   Mic button Setup   #
     ########################
     recognizer = sr.Recognizer()
-    alphabet = "abcdefghijklmnopqrstuvwxyz"
     mic_recording = False
     mic_pin = 17
     GPIO.setup(mic_pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
     GPIO.add_event_detect(mic_pin, GPIO.FALLING, callback = mic_button_callback, bouncetime = 1000)
     
+    ############################
+    # Bluetooth communications #    
+    ############################
+    
+    server = bluetooth.RFCOMM
+    server_sock = bluetooth.BluetoothSocket( server ) 
+    port = bluetooth.PORT_ANY
+    host = ""
+    server_sock.bind( (host,port) ) 
+    server_sock.listen(1) 
+    uuid = '8d0aa681-5e25-44b4-a5d3-d9d907d81c9d'
+    bluetooth.advertise_service(server, "Kevin Link", service_id = uuid, service_classes = \
+                    [uuid, bluetooth.SERIAL_PORT_CLASS], profiles = [bluetooth.SERIAL_PORT_PROFILE])
+    client_sock,address = server_sock.accept() 
 
-
-
-
-
-
-
-
+    print("Accepted connection from %s at address %s" % (client_sock, address))
+    # continuously receive if not triggered by buttons
+    while True: 
+        recvdata = client_sock.recv(1024) 
+        print("Received data: \"%s\" " % recvdata)
+        if (recvdata == "Q"): 
+            print ("Exiting") 
+            break            
+    client_sock.close() 
+    server_sock.close()
 
     ################
     #   Cleanup    #
     ################
     message = input("Press ENTER to quit \n\n") 
     GPIO.cleanup()
-
-
-
-
-
-
-
-
-
-
-
-
