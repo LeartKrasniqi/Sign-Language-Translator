@@ -6,6 +6,7 @@
 import os
 import subprocess
 import sys
+import textwrap
 import time
 import wave
 
@@ -13,7 +14,7 @@ import PIL.ImageOps
 import pyaudio
 import speech_recognition as sr
 from google.cloud import storage
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 import Adafruit_GPIO as AGPIO
 import Adafruit_GPIO.SPI as SPI
@@ -36,36 +37,33 @@ disp = False
 def video_button_callback(channel):
     global video_recording 
     time.sleep(0.3)
-    filename = "v.mjpeg"
+    # filepath within gcp bucket
+    filepath = "./videos/newvideo.mjpeg"
     if(not video_recording):
         # uncomment for single snapshot
         # imagePath = './videos/image_capture.jpg'
-        # camera.capture(imagePath)
-        
-        # os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="<add your credentials path>"
-        # firebase = firebase.FirebaseApplication('<your firebase database path>')
-        # client = storage.Client()
-        # bucket = client.get_bucket('<your firebase storage path>')
-        
-        # # posting to firebase storage
-        # imageBlob = bucket.blob("/")
-        
-        # # imagePath = [os.path.join(self.path,f) for f in os.listdir(self.path)]
-        # # imagePath = "<local_path>/image.png"
-        # imageBlob = bucket.blob("<image_name>")
-        # imageBlob.upload_from_filename(imagePath)
+        # camera.capture(filepath)
         
         # video
         print("video recording...\n")
-        camera.start_recording("./videos/" + filename)
+        camera.start_recording("./videos/" + filepath)
         video_recording = True
     else:
         print("video finished recording...\n")
         camera.stop_recording()
         # Add stuff to send the video and wait for response from app
-        sendVideo(filename)
+        sendVideo(filepath)
         video_recording = False
 
+# Sends the video and waits for response from app
+def sendVideo(filepath):
+    os.environment["GOOGLE_APPLICATION_CREDENTIALS"]='~/CODE/gcp/credentials.json'
+    client = storage.Client()
+    bucket = client.bucket('precise-airship-267920.appspot.com')
+
+    # generate image blob
+    imageBlob = bucket.blob("newVideoBlob")
+    imageBlob.upload_from_filename(filepath)
 
 # Runs when mic button is pressed
 def mic_button_callback(channel):
@@ -119,8 +117,7 @@ def speechRecognition(outfile):
                     disp.display(im)
                     time.sleep(2)
                     disp.clear()
-                # else, move onto fingerspelling mode
-                else:
+                else: # else, move onto fingerspelling mode
                     print("fingerspelling for: ", recognized_word)
                     for letter in recognized_word:
                         # display image if letter is an alphabet
@@ -136,15 +133,11 @@ def speechRecognition(outfile):
         mic_recording = False
 
 
-# Sends the video and waits for response from app
-def sendVideo(f):
-    # Do stuff
-    gclient = storage.client()
-    bucket = gclient.bucket("precise-airship-267920")
-    blob = bucket.blob("videos/" + f)
-    blob.upload_from_filename(filename = "./videos/" + f)
+
 
 if __name__=="__main__":
+    print("Starting run.py...\n")
+
     ###################
     #   Board Setup   #
     ###################
@@ -157,7 +150,9 @@ if __name__=="__main__":
     #   Display Setup    #
     ######################
     SPEED_HZ = 4000000
-
+    DISP_WIDTH = 128
+    DISP_HEIGHT = 128
+    
     # BCM PIN NUMBERS!!
     DC = 26
     RST = 19
@@ -175,7 +170,30 @@ if __name__=="__main__":
 
     disp.begin()
     disp.clear()
-    disp.display()
+    
+    # update initial display upon start
+    image = Image.new('RGB', (DISP_WIDTH, DISP_HEIGHT))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((0,0,DISP_WIDTH,DISP_HEIGHT), fill=(255,255,255))
+    disp.display(image)
+
+    FONTSIZE = 24
+    font = ImageFont.truetype('/usr/share/fonts/truetype/freefont/FreeMono.ttf', FONTSIZE)
+    #font = ImageFont.load_default()
+    text = "Kevin Lin is nice"
+    para = textwrap.wrap(text,width=10)
+    im = Image.new('RGB', (DISP_WIDTH,DISP_HEIGHT), (0,0,0,0))
+    draw = ImageDraw.Draw(im)
+    
+    current_h, pad = 50, 10
+    for line in para:
+        w,h = draw.textsize(line, font=font)
+        draw.text(((DISP_WIDTH-w)/2, current_h), line, font=font)
+        current_h += h + pad
+    im = PIL.ImageOps.invert(im)
+    disp.display(im)
+    
+    # disp.display()
     disp.end()
 
     ###########################
@@ -210,18 +228,25 @@ if __name__=="__main__":
     uuid = '8d0aa681-5e25-44b4-a5d3-d9d907d81c9d'
     bluetooth.advertise_service(server, "Kevin Link", service_id = uuid, service_classes = \
                     [uuid, bluetooth.SERIAL_PORT_CLASS], profiles = [bluetooth.SERIAL_PORT_PROFILE])
-    client_sock,address = server_sock.accept() 
+    client_sock, address = server_sock.accept() 
 
     print("Accepted connection from %s at address %s" % (client_sock, address))
-    # continuously receive if not triggered by buttons
-    while True: 
-        recvdata = client_sock.recv(1024) 
-        print("Received data: \"%s\" " % recvdata)
-        if (recvdata == "Q"): 
-            print ("Exiting") 
-            break            
-    client_sock.close() 
-    server_sock.close()
+    
+    msg2 = "Received Data!"
+    try:
+        while(True):
+            data = client_sock.recv(1024)
+            if data:
+                client_sock.send(msg2)
+        
+    except Exception as e:
+        print("Exception found! {}: {}".format(type(e), e.message))
+        client_sock.close()
+        server.close()
+    client_sock.close()
+    server.close()
+
+
 
     ################
     #   Cleanup    #
