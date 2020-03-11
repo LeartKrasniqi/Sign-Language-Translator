@@ -95,7 +95,7 @@ def speechRecognition(outfile):
     disp_height = 128
     speech = sr.AudioFile(outfile)
     
-    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    #alphabet = "abcdefghijklmnopqrstuvwxyz"
     words_dict = ["goodbye","hello","no","please","sorry","thanks","yes","you're welcome"]
     try:
         with speech as source:
@@ -121,11 +121,14 @@ def speechRecognition(outfile):
                     print("fingerspelling for: ", recognized_word)
                     for letter in recognized_word:
                         # display image if letter is an alphabet
-                        if letter in alphabet: 
-                            im = Image.open("./letters/" + letter + ".png")
-                            im = im.transpose(Image.FLIP_LEFT_RIGHT).resize((disp_width, disp_height))
-                            im = PIL.ImageOps.invert(im)
-                            disp.display(im)
+                        if letter.isalpha(): 
+                            im = Image.open("./letters/" + letter.upper() + ".png")
+                        elif letter.isnumeric():
+                            digit = letter
+                            im = Image.open("./digits/" + digit + ".png")
+                        im = im.transpose(Image.FLIP_LEFT_RIGHT).resize((disp_width, disp_height))
+                        im = PIL.ImageOps.invert(im)
+                        disp.display(im)
                         time.sleep(2)
                         disp.clear()
     except Exception as e:
