@@ -136,3 +136,5 @@ dmypy.json
 
 # Secret Stuff
 secrets/
+
+ASL_Translation_Final/gcp/

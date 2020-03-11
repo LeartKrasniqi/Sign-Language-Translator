@@ -24,10 +24,12 @@ print('Client', client)
 
 try:
     while(True):
-        client.send("here is message!")
+        msg2 = "Sent Message!"
+        client.send(msg2)
         data = client.recv(1024)
         if data:
             print(data)
+            client.send(msg2)
     
 except:
     client.close()

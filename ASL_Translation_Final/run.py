@@ -36,24 +36,11 @@ disp = False
 def video_button_callback(channel):
     global video_recording 
     time.sleep(0.3)
-    filename = "v.mjpeg"
+    filename = "./videos/newvideo.mjpeg"
     if(not video_recording):
         # uncomment for single snapshot
         # imagePath = './videos/image_capture.jpg'
         # camera.capture(imagePath)
-        
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="~/CODE/secrets/credentials.json"
-        # firebase = firebase.FirebaseApplication('<your firebase database path>')
-        client = storage.Client()
-        bucket = client.bucket('slab-asl-testing')
-       
-        # posting to firebase storage
-        imageBlob = bucket.blob("test_blob")
-        
-        # # imagePath = [os.path.join(self.path,f) for f in os.listdir(self.path)]
-        # # imagePath = "<local_path>/image.png"
-        # imageBlob = bucket.blob("<image_name>")
-        # imageBlob.upload_from_filename(imagePath)
         
         # video
         print("video recording...\n")
@@ -66,6 +53,14 @@ def video_button_callback(channel):
         sendVideo(filename)
         video_recording = False
 
+def sendVideo(filename):
+    os.environment["GOOGLE_APPLICATION_CREDENTIALS"]='./gcp/credentials.json'
+    client = storage.Client()
+    bucket = client.bucket('precise-airship-267920.appspot.com')
+
+    # generate image blob
+    imageBlob = bucket.blob("newVideoBlob")
+    imageBlob.upload_from_filename(filename)
 
 # Runs when mic button is pressed
 def mic_button_callback(channel):
