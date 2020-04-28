@@ -1,6 +1,8 @@
 import os
 from flask import Flask, flash, request, redirect, url_for
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
+
 app = Flask(__name__)
 
 UPLOAD_FOLDER = './videos/'
@@ -8,6 +10,7 @@ ALLOWED_EXTENSIONS = {'mpg', 'mp4'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CORS(app)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -17,9 +20,32 @@ def allowed_file(filename):
 def hello():
     return "Hello World!"
 
-@app.route('/coffee3')
-def hello_world():
-    return 'Hello, World!'
+@app.route('/audio',methods=['POST'])
+def audio():
+    if request.method == 'POST':
+        file = request.files['audio']
+        filename = "myaudio.webm"
+        filename = secure_filename(filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    return "success"
+
+@app.route('/video',methods=['POST'])
+def video():
+    if request.method == 'POST':
+        file = request.files['video']
+        filename = "myvideo.webm"
+        filename = secure_filename(filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    return "success"
+
+@app.route('/audiovideo', methods=['POST'])
+def audiovideo():
+    if request.method == 'POST':
+        file = request.files['audiovideo']
+        filename = "myaudiovideo.webm"
+        filename = secure_filename(filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    return "success"
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
@@ -45,5 +71,6 @@ def upload_file():
         </form>
         '''
 
+
 if __name__ == '__main__':
-    app.run()
+    app.run(host="localhost", port=42248, debug=True)
