@@ -2,6 +2,7 @@ import os
 from flask import Flask, flash, request, redirect, url_for
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+
 app = Flask(__name__)
 
 UPLOAD_FOLDER = './videos/'
@@ -69,8 +70,6 @@ def upload_file():
           <input type=submit value=Upload>
         </form>
         '''
-
-
 
 
 if __name__ == '__main__':
