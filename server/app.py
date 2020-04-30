@@ -20,7 +20,7 @@ def allowed_file(filename):
 def hello():
     return "Hello World!"
 
-@app.route('/audio',methods=['POST'])
+@app.route('/audio',methods=['POST', 'GET'])
 def audio():
     if request.method == 'POST':
         file = request.files['audio']
@@ -29,7 +29,7 @@ def audio():
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return "success"
 
-@app.route('/video',methods=['POST'])
+@app.route('/video',methods=['POST','GET'])
 def video():
     if request.method == 'POST':
         file = request.files['video']
@@ -38,7 +38,7 @@ def video():
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return "success"
 
-@app.route('/audiovideo', methods=['POST'])
+@app.route('/audiovideo', methods=['POST','GET'])
 def audiovideo():
     if request.method == 'POST':
         file = request.files['audiovideo']
@@ -47,7 +47,7 @@ def audiovideo():
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return "success"
 
-@app.route('/api/upload', methods=['POST'])
+@app.route('/api/upload', methods=['POST','GET'])
 def upload_file():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -62,13 +62,13 @@ def upload_file():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return redirect(url_for('uploaded_file', filename=filename))
         return '''
-        <!doctype html>
-        <title>Upload new File</title>
-        <h1>Upload new File</h1>
-        <form method=post enctype=multipart/form-data>
-          <input type=file name=file>
-          <input type=submit value=Upload>
-        </form>
+            <!doctype html>
+            <title>Upload new File</title>
+            <h1>Upload new File</h1>
+            <form method=post enctype=multipart/form-data>
+            <input type=file name=file>
+            <input type=submit value=Upload>
+            </form>
         '''
 
 
