@@ -61,7 +61,7 @@ year ./words/years.png
 long ./words/long.png
 time ./words/time.png
 where ./words/where.png
-? ./words/?.png
+? ./words/QMARK.png
 room ./words/room.png
 cheap ./words/cheap.png
 inexpensive ./words/cheap.png
@@ -168,7 +168,7 @@ lock ./words/lock.png
 rent ./words/rent.png
 window ./words/window.png
 has ./words/has.png
-have ./words/have.png
+have ./words/has.png
 big ./words/big.png
 bathroom ./words/bathroom.png
 bedroom ./words/bedroom.png
@@ -203,7 +203,7 @@ hour ./words/hours.png
 dad ./words/dad.png
 father ./words/dad.png
 mom ./words/mom.png
-mother ./words/mother.png
+mother ./words/mom.png
 son ./words/son.png
 daughter ./words/daughter.png
 brother ./words/brother.png
@@ -265,7 +265,7 @@ dinner ./words/dinner.png
 coffee ./words/coffee.png
 need ./words/need.png
 whiskey ./words/whiskey.png
-alcohol ./words/alcohol.png
+alcohol ./words/whiskey.png
 water ./words/water.png
 tea ./words/tea.png
 warm ./words/warm.png
@@ -273,7 +273,7 @@ strong ./words/strong.png
 save ./words/save.png
 wear ./words/wear.png
 clothes ./words/clothes.png
-clothing ./words/clothing.png
+clothing ./words/clothes.png
 hoodie ./words/hoodie.png
 black ./words/black.png
 blue ./words/blue.png
@@ -322,7 +322,7 @@ basketball ./words/basketball.png
 baseball ./words/baseball.png
 football ./words/football.png
 hockey ./words/hockey.png
-tennis./words/tennis.png
+tennis ./words/tennis.png
 wrestling ./words/wrestling.png
 race ./words/race.png
 compete ./words/race.png
