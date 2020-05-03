@@ -100,6 +100,7 @@ true ./words/true.png
 cost ./words/cost.png
 increase ./words/increase.png
 also ./words/also.png
+and ./words/also.png
 but ./words/but.png
 or ./words/or.png
 other ./words/other.png
