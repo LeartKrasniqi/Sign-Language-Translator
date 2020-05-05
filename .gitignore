@@ -136,3 +136,6 @@ dmypy.json
 
 # Secret Stuff
 secrets/
+
+#videos and voice
+server/videos

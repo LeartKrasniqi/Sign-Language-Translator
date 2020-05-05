@@ -1,0 +1,210 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Senior Project ASL</title>
+  <h1>Senior Project ASL</h1>
+</head>
+
+<style>
+/* change player background color */
+#myVideo {
+    background-color: #A9A9A9;
+}
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+</style>
+<link href="./video-js.min.css" rel="stylesheet">
+<link href="./videojs.record.css" rel="stylesheet">
+
+<script src="video.min.js"></script>
+<script src="RecordRTC.js"></script>
+<script src="adapter.js"></script>
+<script src="wavesurfer.min.js"></script>
+<script src="wavesurfer.microphone.min.js"></script>
+<script src="videojs.wavesurfer.min.js"></script>
+
+<script src="videojs.record.js"></script>
+
+<body onload="openCity(event, 'Video to Text')">
+  <div id="tabs" class="tab">
+    <button class="tablinks" onclick="openCity(event, 'Video to Text')">Video to Text</button>
+    <button class="tablinks" onclick="openCity(event, 'Speech to ASL')">Speech to ASL</button>
+  </div>
+
+  <div id="Video to Text" class="tabcontent">
+    <video id="myVideo" class="video-js vjs-default-skin"></video>
+  </div>
+
+  <div id="Speech to ASL" class="tabcontent">
+    <audio id="myAudio" class="video-js vjs-default-skin"></audio>
+  </div>
+
+
+</body>
+<script>
+var url = "http://127.0.0.1:42248/"
+function openCity(evt, cityName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(cityName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+function xhr(url, data, callback) {
+  var request = new XMLHttpRequest();
+  request.onreadystatechange = function () {
+      if (request.readyState == 4 && request.status == 200) {
+          //console.log(JSON.parse(request.responseText));
+          var images = JSON.parse(request.responseText);
+          callback(location.href + request.responseText, images);
+      }
+  };
+  request.open('POST', url);
+  request.send(data);
+}
+
+var video_player = videojs("myVideo", {
+  controls: true,
+  width: 720,
+  height: 540,
+  fluid: false,
+  plugins: {
+    record: {
+      audio: true,
+      video: true,
+      maxLength: 10,
+      debug: true
+    }
+  }
+}, function(){
+  var msg = 'Using video.js ' + videojs.VERSION +
+      ' with videojs-record ' + videojs.getPluginVersion('record') +
+      ' and recordrtc ' + RecordRTC.version;
+  videojs.log(msg);
+});
+video_player.on('deviceError', function() {
+  console.log('device error:', video_player.deviceErrorCode);
+});
+video_player.on('error', function(error) {
+  console.log('error:', error);
+});
+video_player.on('startRecord', function() {
+  console.log('started recording!');
+});
+video_player.on('finishRecord', function() {
+  console.log('finished recording: ', video_player.recordedData);
+
+  var formData = new FormData();
+  formData.append('audiovideo', video_player.recordedData.video);
+  xhr(url + "audiovideo", formData, function (fName) {
+    console.log("Video succesfully uploaded !");
+  });
+});
+var audio_player = videojs("myAudio", {
+  controls: true,
+  width: 600,
+  height: 300,
+  fluid: false,
+  plugins: {
+    wavesurfer: {
+      src: "live",
+      waveColor: "#36393b",
+      progressColor: "black",
+      debug: true,
+      cursorWidth: 1,
+      msDisplayMax: 20,
+      hideScrollbar: true
+    },
+    record: {
+      audio: true,
+      video: false,
+      maxLength: 20,
+      debug: true
+    }
+  }
+}, function() {
+    // print version information at startup
+  var msg = 'Using video.js ' + videojs.VERSION +
+      ' with videojs-record ' + videojs.getPluginVersion('record') +
+      ', videojs-wavesurfer ' + videojs.getPluginVersion('wavesurfer') +
+      ', wavesurfer.js ' + WaveSurfer.VERSION + ' and recordrtc ' +
+      RecordRTC.version;
+  videojs.log(msg);
+});
+audio_player.on('deviceError', function() {
+  console.log('device error:', audio_player.deviceErrorCode);
+});
+audio_player.on('error', function(error) {
+  console.log('error:', error);
+});
+audio_player.on('startRecord', function() {
+  console.log('started recording!');
+});
+audio_player.on('finishRecord', function() {
+  console.log('finished recording: ', audio_player.recordedData);
+  var formData = new FormData();
+  formData.append('audio', audio_player.recordedData);
+  xhr(url + "audio", formData, function (fName, images) {
+    console.log(images)
+    var carousal = document.createElement('div');
+    carousal.id = 'carousal';
+    carousal.className = "slideshow-container";
+    var index = 1;
+    for (var img_link in images) {
+      console.log(images[img_link])
+      var img_container = document.createElement('div');
+      var img_num = document.createElement('div');
+      img_num.className = "number"
+      var img = document.createElement('img');
+      img.src = images[img_link];
+      img_container.appendChild(img_num);
+      img_container.appendChild(img);
+      carousal.appendChild(img_container);
+    }
+    console.log(carousal);
+    document.getElementById("Speech to ASL").appendChild(carousal);
+  });
+});
+</script>
+</html>
