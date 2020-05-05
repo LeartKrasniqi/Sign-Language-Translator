@@ -37,6 +37,9 @@ for line in dict_lines:
 	if stem not in stem_dict.keys():
 		stem_dict[stem] = filepath
 
+# List of words that do not need a sign
+non_signs = ["is", "are", "be"]
+
 # Translate the sentences
 #    takes recognized_words as input and
 #    returns a valid path to each word or letter
@@ -48,7 +51,14 @@ def text2imgpath(recognized_words):
         tokens = word_tokenize(s)
         for t in tokens:
             t = t.lower()
+
+            # Skip words that do not need a sign
+            if t in non_signs:
+                continue
+
+            # Get stem of word
             wordstem = stemmer.stem(t)
+
             if t in word_dict.keys():
                 # word image
                 return word_dict[t]
