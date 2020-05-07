@@ -3,10 +3,13 @@ import glob
 import os
 from subprocess import call
 
-
-def extract_files():
+def extract_files(predict=None):
     data_file = []
-    folders = ['train', 'test']
+    global folders
+    if predict == None:
+        folders = ['train', 'test']
+    else:
+        folders = ['predict']
 
     for folder in folders:
         # Obtain list of files in train and test folder
@@ -36,7 +39,12 @@ def extract_files():
                 data_file.append([folder, classname, file, num_frames])
 
     # Write video information to file in order to make training and difference generator easier
-    with open('data_file.csv', 'w') as fout:
+    global dataFile
+    if predict == None:
+        dataFile = 'data_file.csv'
+    else:
+        dataFile = 'data_file_predict.csv'
+    with open(dataFile, 'w', newline='') as fout:
         writer = csv.writer(fout)
         writer.writerows(data_file)
 
