@@ -19,7 +19,7 @@ def process_image(image, target_shape):
 
 class DataSet():
 
-    def __init__(self, seq_length=40, class_limit=32, image_shape=(224, 224, 3)):
+    def __init__(self, seq_length=40, class_limit=32, image_shape=(224, 224, 3),predict=None):
         """Constructor.
         seq_length = (int) the number of frames to consider
         class_limit = (int) number of classes to limit the data to.
@@ -27,11 +27,15 @@ class DataSet():
         """
         self.seq_length = seq_length
         self.class_limit = class_limit
-        self.sequence_path = os.path.join('data', 'sequences')
+        global seq_path
+        if predict == None:
+            seq_path = './sequences'
+        else:
+            seq_path = './predict_sequences'
+        self.sequence_path = seq_path
         self.max_frames = 300  # max number of frames a video can have for us to use it
 
-        # Get the data.
-        self.data = self.get_data()
+        self.data = self.get_data(predict=predict)
 
         # Get the classes.
         self.classes = self.get_classes()
@@ -42,9 +46,14 @@ class DataSet():
         self.image_shape = image_shape
 
     @staticmethod
-    def get_data():
+    def get_data(predict=None):
         """Load our data from file."""
-        with open(os.path.join('data', 'data_file.csv'), 'r') as fin:
+        global dataFile
+        if predict == None:
+            dataFile = 'data_file.csv'
+        else:
+            dataFile = 'data_file_predict.csv'
+        with open(dataFile, 'r') as fin:
             reader = csv.reader(fin)
             data = list(reader)
 
@@ -122,6 +131,24 @@ class DataSet():
 
         return np.array(X), np.array(y)
 
+    def get_predict_sequences_in_memory(self, data_type='features'):
+        # Get the right dataset.
+        data = self.data
+
+        print("Loading %d samples into memory for prediction." % len(data))
+
+        X = []
+        for row in data:
+            sequence = self.get_extracted_sequence(data_type, row)
+
+            if sequence is None:
+                print("Can't find sequence. Did you generate them?")
+                raise
+
+            X.append(sequence)
+
+        return np.array(X)
+
     def build_image_sequence(self, frames):
         """Given a set of frames (filenames), build our sequence."""
         return [process_image(x, self.image_shape) for x in frames]
@@ -165,7 +192,7 @@ class DataSet():
 
     @staticmethod
     def get_frames_for_sample(sample):
-        path = os.path.join('data', sample[0], sample[1])
+        path = os.path.join(sample[0], sample[1])
         filename = sample[2]
         images = sorted(glob.glob(os.path.join(path, filename + '*jpg')))
         return images

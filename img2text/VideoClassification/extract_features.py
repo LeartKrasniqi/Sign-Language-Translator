@@ -21,40 +21,48 @@ from tqdm import tqdm
 seq_length = 40
 class_limit = 32  # Number of classes to extract. Can be 1-101 or None for all.
 
-# Get the dataset.
-data = DataSet(seq_length=seq_length)
+def extract_features(predict=None):
+    # Get the dataset.
+    data = DataSet(seq_length=seq_length,predict=predict)
 
-# get the model.
-model = Extractor()
+    # get the model.
+    model = Extractor()
 
-# Loop through data.
-pbar = tqdm(total=len(data.data))
-for video in data.data:
+    # Loop through data.
+    pbar = tqdm(total=len(data.data))
+    for video in data.data:
+        global path
+        if predict == None:
+            path = 'sequences'
+        else:
+            path = 'predict_sequences'
+        # Get the path to the sequence for this video.
+        path = os.path.join(path, video[2] + '-' + str(seq_length) + \
+            '-features')  # numpy will auto-append .npy
 
-    # Get the path to the sequence for this video.
-    path = os.path.join('data', 'sequences', video[2] + '-' + str(seq_length) + \
-        '-features')  # numpy will auto-append .npy
+        # Check if we already have it.
+        if os.path.isfile(path + '.npy'):
+            pbar.update(1)
+            continue
 
-    # Check if we already have it.
-    if os.path.isfile(path + '.npy'):
+        # Get the frames for this video.
+        frames = data.get_frames_for_sample(video)
+
+        # Now downsample to just the ones we need.
+        frames = data.rescale_list(frames, seq_length)
+
+        # Now loop through and extract features to build the sequence.
+        sequence = []
+        for image in frames:
+            features = model.extract(image)
+            sequence.append(features)
+
+        # Save the sequence.
+        np.save(path, sequence)
+
         pbar.update(1)
-        continue
 
-    # Get the frames for this video.
-    frames = data.get_frames_for_sample(video)
+    pbar.close()
 
-    # Now downsample to just the ones we need.
-    frames = data.rescale_list(frames, seq_length)
-
-    # Now loop through and extract features to build the sequence.
-    sequence = []
-    for image in frames:
-        features = model.extract(image)
-        sequence.append(features)
-
-    # Save the sequence.
-    np.save(path, sequence)
-
-    pbar.update(1)
-
-pbar.close()
+if __name__ == '__main__':
+    extract_features()
