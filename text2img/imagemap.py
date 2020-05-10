@@ -44,6 +44,8 @@ for line in dict_lines:
 
 # Words that do not need a sign
 non_words = ["is", "are", "be"]
+
+alpha = "abcdefghijklmnopqrstuvwxyz" 
   
 # Translate the sentences
 sentences_file = open("./tests/sentences.txt", "r")
@@ -64,6 +66,8 @@ for s in sentences:
 		else:
 			chars = list(t)
 			for c in chars:
+				if c not in alpha:
+					continue
 				path = "../img/letters/{}.png".format(c)
 				show_img(path,0.5)
 		
