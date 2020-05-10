@@ -40,37 +40,42 @@ for line in dict_lines:
 # List of words that do not need a sign
 non_signs = ["is", "are", "be"]
 
+# The alphabet
+alpha = "abcdefghijklmnopqrstuvwxyz"
+
 # Translate the sentences
 #    takes recognized_words as input and
 #    returns a valid path to each word or letter
 def text2imgpath(recognized_words):
     # sample file that contains a few lines of text:
     # sentences_file = open("../text2img/tests/sentences.txt", "r")
-    words = recognized_words
+    s = recognized_words
     img_links = []
-    for s in words:
-        tokens = word_tokenize(s)
-        for t in tokens:
-            t = t.lower()
+    tokens = word_tokenize(s)
+    for t in tokens:
+        t = t.lower()
 
-            # Skip words that do not need a sign
-            if t in non_signs:
-                continue
+        # Skip words that do not need a sign
+        if t in non_signs:
+            continue
 
-            # Get stem of word
-            wordstem = stemmer.stem(t)
+        # Get stem of word
+        wordstem = stemmer.stem(t)
 
-            if t in word_dict.keys():
-                # word image
-                img_links.append(word_dict[t])
-            elif wordstem in stem_dict.keys():
-                img_links.append(stem_dict[wordstem])
-            else:
-                # letter image
-                chars = list(t)
-                for c in chars:
-                    path = "../img/letters/{}.png".format(c)
-                    img_links.append(path)
+        if t in word_dict.keys():
+            # word image
+            img_links.append(word_dict[t])
+        elif wordstem in stem_dict.keys():
+            img_links.append(stem_dict[wordstem])
+        else:
+            # letter image
+            chars = list(t)
+            for c in chars:
+                # Skip any thing not in our dictionary 
+                if c not in alpha:
+                    continue
+                path = "../img/letters/{}.png".format(c)
+                img_links.append(path)
     return img_links
 # set up server
 app = Flask(__name__)
@@ -112,7 +117,7 @@ def audio():
                 recognizer.adjust_for_ambient_noise(audio_file)
                 audio = recognizer.record(audio_file, offset = 0)
                 # list of recognized words in list
-                recog_words = recognizer.recognize_google(audio).lower().split(",!? ")
+                recog_words = recognizer.recognize_google(audio).lower() #.split(",!? ")
                 # get image path for the word
                 imgpath = text2imgpath(recog_words)
                 return(jsonify(imgpath))
