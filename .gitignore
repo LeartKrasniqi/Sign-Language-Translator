@@ -139,3 +139,5 @@ secrets/
 
 #videos and voice
 server/videos
+server/images
+server/voice

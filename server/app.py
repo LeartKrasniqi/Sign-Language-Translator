@@ -31,11 +31,11 @@ for line in dict_lines:
 	word = split[0]
 	filepath = dict_dir + split[1]
 	if word not in word_dict.keys():
-		word_dict[word] = "https://raw.githubusercontent.com/LeartKrasniqi/Sign-Language-Translator/post-covid-19/img/words/" + word + ".png"
+		word_dict[word] = filepath
 
 	stem = stemmer.stem(word)
 	if stem not in stem_dict.keys():
-		stem_dict[stem] = "https://raw.githubusercontent.com/LeartKrasniqi/Sign-Language-Translator/post-covid-19/img/words/" + word + ".png"
+		stem_dict[stem] = filepath
 
 # List of words that do not need a sign
 non_signs = ["is", "are", "be"]
@@ -69,17 +69,21 @@ def text2imgpath(recognized_words):
                 # letter image
                 chars = list(t)
                 for c in chars:
-                    path = "https://raw.githubusercontent.com/LeartKrasniqi/Sign-Language-Translator/post-covid-19/img/letters/{}.png".format(c)
+                    path = "../img/letters/{}.png".format(c)
                     img_links.append(path)
     return img_links
 # set up server
 app = Flask(__name__)
 
-UPLOAD_FOLDER = './videos/'
+UPLOAD_FOLDER_VIDEO = './videos/'
+UPLOAD_FOLDER_VOICE = './voice/'
+UPLOAD_FOLDER_IMAGE = './images/'
 ALLOWED_EXTENSIONS = {'mpg', 'mp4'}
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER_VIDEO'] = UPLOAD_FOLDER_VIDEO
+app.config['UPLOAD_FOLDER_VOICE'] = UPLOAD_FOLDER_VOICE
+app.config['UPLOAD_FOLDER_IMAGE'] = UPLOAD_FOLDER_IMAGE
 CORS(app)
 
 def allowed_file(filename):
@@ -94,10 +98,10 @@ def hello():
 def audio():
     if request.method == 'POST':
         file = request.files['audio']
-        filename = "myaudio.webm"
+        filename = "speech"
         filename = secure_filename(filename)
-        audiopath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        audionewpath = os.path.join(app.config['UPLOAD_FOLDER'], "myaudio.wav")
+        audiopath = os.path.join(app.config['UPLOAD_FOLDER_VOICE'], filename + ".webm")
+        audionewpath = os.path.join(app.config['UPLOAD_FOLDER_VOICE'], filename + ".wav")
         file.save(audiopath)
 
         command = "ffmpeg -i " + audiopath + " -ab 160k -ac 2 -y -ar 44100 -vn " + audionewpath
@@ -112,22 +116,29 @@ def audio():
                 # get image path for the word
                 imgpath = text2imgpath(recog_words)
                 return(jsonify(imgpath))
-                    #
-                    # TODO: display to the front end HERE
-                    #
             except Exception as e:
                 print("Exception found!: {}: {}".format(type(e), e.message))
 
     return "success"
 
-@app.route('/audiovideo', methods=['POST','GET'])
+@app.route('/video', methods=['POST','GET'])
 def audiovideo():
     if request.method == 'POST':
         file = request.files['audiovideo']
-        filename = "myaudiovideo.webm"
+        filename = "asl_video.webm"
         filename = secure_filename(filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file.save(os.path.join(app.config['UPLOAD_FOLDER_VIDEO'], filename))
     return jsonify(status="success", text="blah")
+
+
+@app.route('/image', methods=['POST','GET'])
+def image():
+    if request.method == 'POST':
+        file = request.files['image']
+        filename = "asl_image.png"
+        filename = secure_filename(filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER_IMAGE'], filename))
+    return jsonify(letter='H')
 
 @app.route('/api/upload', methods=['POST','GET'])
 def upload_file():
