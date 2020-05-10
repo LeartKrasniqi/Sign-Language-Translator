@@ -6,6 +6,7 @@ import os
 import create_images
 import extract_features
 import operator
+import numpy as np
 
 MODEL_NAME = 'VIDC'
 EPOCHS = 10
@@ -40,8 +41,16 @@ def test():
     rm.model.load_weights('./checkpoints/my_checkpoint')
     data = DataSet(seq_length=SEQUENCE_LEN, image_shape=None, predict=1)
     X = data.get_predict_sequences_in_memory()
-    output = rm.model.predict(X)
-    print(output)
+    output = np.argmax(rm.model.predict(X), axis=-1)
+    indexFile = "./TrainTestlist/classInd.txt"
+    map = open(indexFile, "r")
+    lines = map.read().splitlines()
+    dictionary= dict()
+    for line in lines:
+        tmp = line.split()
+        dictionary[tmp[0]] = tmp[1]
+    for decision in output:
+        print(dictionary[str(int(decision) + 1)])
 
 def main():
     saved_model = None  # None or weights file
