@@ -59,14 +59,19 @@
 
 <script src="videojs.record.js"></script>
 
-<body onload="openCity(event, 'Video to Text')">
+<body onload="openTab(event, 'Video to Text')">
   <div id="tabs" class="tab">
-    <button class="tablinks" onclick="openCity(event, 'Video to Text')">Video to Text</button>
-    <button class="tablinks" onclick="openCity(event, 'Speech to ASL')">Speech to ASL</button>
+    <button class="tablinks" onclick="openTab(event, 'Video to Text')">Video to Text</button>
+    <button class="tablinks" onclick="openTab(event, 'Image to Text')">Image to Text</button>
+    <button class="tablinks" onclick="openTab(event, 'Speech to ASL')">Speech to ASL</button>
   </div>
 
   <div id="Video to Text" class="tabcontent">
     <video id="myVideo" class="video-js vjs-default-skin"></video>
+  </div>
+
+  <div id="Image to Text" class="tabcontent">
+    <video id="image" class="video-js vjs-default-skin"></video>
   </div>
 
   <div id="Speech to ASL" class="tabcontent">
@@ -77,7 +82,7 @@
 </body>
 <script>
 var url = "http://127.0.0.1:42248/"
-function openCity(evt, cityName) {
+function openTab(evt, cityName) {
   var i, tabcontent, tablinks;
   tabcontent = document.getElementsByClassName("tabcontent");
   for (i = 0; i < tabcontent.length; i++) {
@@ -96,8 +101,8 @@ function xhr(url, data, callback) {
   request.onreadystatechange = function () {
       if (request.readyState == 4 && request.status == 200) {
           //console.log(JSON.parse(request.responseText));
-          var images = JSON.parse(request.responseText);
-          callback(location.href + request.responseText, images);
+          var req_body = JSON.parse(request.responseText);
+          callback(location.href + request.responseText, req_body);
       }
   };
   request.open('POST', url);
@@ -137,7 +142,7 @@ video_player.on('finishRecord', function() {
 
   var formData = new FormData();
   formData.append('audiovideo', video_player.recordedData.video);
-  xhr(url + "audiovideo", formData, function (fName) {
+  xhr(url + "video", formData, function (fName) {
     console.log("Video succesfully uploaded !");
   });
 });
@@ -186,13 +191,16 @@ audio_player.on('finishRecord', function() {
   var formData = new FormData();
   formData.append('audio', audio_player.recordedData);
   xhr(url + "audio", formData, function (fName, images) {
-    console.log(images)
+    var prev_cont = document.getElementById('carousal');
+    if (prev_cont != null) {
+      //console.log(prev_cont);
+      prev_cont.remove();
+    }
     var carousal = document.createElement('div');
     carousal.id = 'carousal';
     carousal.className = "slideshow-container";
     var index = 1;
     for (var img_link in images) {
-      console.log(images[img_link])
       var img_container = document.createElement('div');
       var img_num = document.createElement('div');
       img_num.className = "number"
@@ -204,6 +212,59 @@ audio_player.on('finishRecord', function() {
     }
     console.log(carousal);
     document.getElementById("Speech to ASL").appendChild(carousal);
+  });
+});
+
+var img_player = videojs("image", {
+    controls: true,
+    width: 320,
+    height: 240,
+    fluid: false,
+    controlBar: {
+        volumePanel: false,
+        fullscreenToggle: false
+    },
+    plugins: {
+        record: {
+            image: true,
+            debug: true
+        }
+    }
+}, function(){
+  var msg = 'Using video.js ' + videojs.VERSION + ' with videojs-record ' + videojs.getPluginVersion('record');
+  videojs.log(msg);
+});
+// error handling
+img_player.on('deviceError', function() {
+  console.warn('device error:', img_player.deviceErrorCode);
+});
+img_player.on('error', function(error) {
+  console.log('error:', error);
+});
+img_player.on('finishRecord', function() {
+  var formData = new FormData();
+  const byteCharacters = window.atob(img_player.recordedData.slice(22));
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], {type: 'image/png'});
+  console.log(blob);
+  formData.append('image', blob);
+  console.log(formData)
+  xhr(url + "image", formData, function (fName, req_body) {
+    var prev_cont = document.getElementById('letter');
+    if (prev_cont != null) {
+      //console.log(prev_cont);
+      prev_cont.remove();
+    }
+    console.log(req_body.letter);
+    var text_translation = document.createElement('h2');
+    text_translation.id = 'letter';
+    text_translation.innerHTML = req_body.letter
+    document.getElementById("Image to Text").appendChild(text_translation);
+    console.log("Image succesfully uploaded !");
   });
 });
 </script>
