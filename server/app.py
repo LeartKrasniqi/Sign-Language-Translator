@@ -71,7 +71,7 @@ def text2imgpath(recognized_words):
             # letter image
             chars = list(t)
             for c in chars:
-                # Skip any thing not in our dictionary 
+                # Skip any thing not in our dictionary
                 if c not in alpha:
                     continue
                 path = "../img/letters/{}.png".format(c)
@@ -131,6 +131,16 @@ def audiovideo():
     if request.method == 'POST':
         file = request.files['audiovideo']
         filename = "asl_video.webm"
+        filename = secure_filename(filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER_VIDEO'], filename))
+    return jsonify(status="success", text="blah")
+
+
+@app.route('/videofile', methods=['POST','GET'])
+def videofile():
+    if request.method == 'POST':
+        file = request.files['video']
+        filename = "asl_video.mp4"
         filename = secure_filename(filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER_VIDEO'], filename))
     return jsonify(status="success", text="blah")

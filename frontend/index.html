@@ -62,12 +62,20 @@
 <body onload="openTab(event, 'Video to Text')">
   <div id="tabs" class="tab">
     <button class="tablinks" onclick="openTab(event, 'Video to Text')">ASL Video to English</button>
+    <button class="tablinks" onclick="openTab(event, 'Video file to Text')">ASL Video Upload to English</button>
     <button class="tablinks" onclick="openTab(event, 'Image to Text')">ASL Image to English</button>
     <button class="tablinks" onclick="openTab(event, 'Speech to ASL')">Speech to ASL</button>
   </div>
 
   <div id="Video to Text" class="tabcontent">
     <video id="myVideo" class="video-js vjs-default-skin"></video>
+  </div>
+
+  <div id="Video file to Text" class="tabcontent">
+    <input type="file" id="input">
+    <br>
+    <br>
+    <button type="button" id="submit">Submit</button>
   </div>
 
   <div id="Image to Text" class="tabcontent">
@@ -107,6 +115,22 @@ function xhr(url, data, callback) {
   };
   request.open('POST', url);
   request.send(data);
+}
+
+const inputElement = document.getElementById("submit");
+const fileElement = document.getElementById("input");
+inputElement.addEventListener("click", handleFiles, false);
+function handleFiles() {
+  const fileList = fileElement.files; /* now you can work with the file list */
+  if (fileList.length > 0) {
+    console.log(fileElement.files);
+    const formData = new FormData();
+    formData.append('video', fileList[0]);
+    console.log(formData);
+    xhr(url + "videofile", formData, function (fName, req_body) {
+      console.log(req_body);
+    });
+  }
 }
 
 var video_player = videojs("myVideo", {
