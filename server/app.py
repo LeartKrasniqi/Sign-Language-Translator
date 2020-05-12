@@ -1,8 +1,27 @@
 import os
+import sys
+import numpy as np
 from flask import Flask, flash, request, redirect, url_for, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import subprocess
+import time
+
+sys.path.insert(0, "../img2text/VideoClassification")
+sys.path.insert(0, "../img2text")
+
+SEQUENCE_LEN = 40
+
+import train
+import extractor
+import models
+import pp
+extract_model = extractor.Extractor()
+predict_model = models.Model(SEQUENCE_LEN, None)
+predict_model.model.load_weights('../img2text/VideoClassification/checkpoints/my_checkpoint')
+
+img_model = pp.Model()
+img_model.load("../img2text/checkpoints/cp-0050.ckpt")
 
 # set up text to speech map
 from nltk.stem import PorterStemmer
@@ -15,7 +34,7 @@ recognizer = sr.Recognizer()
 # Create dictionary
 word_dict = dict()
 stem_dict = dict()
-
+alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 # Create stemmer
 stemmer = PorterStemmer()
 
@@ -38,7 +57,7 @@ for line in dict_lines:
 		stem_dict[stem] = filepath
 
 # List of words that do not need a sign
-non_signs = ["is", "are", "be"]
+non_signs = ["is", "are", "be", "am"]
 
 # The alphabet
 alpha = "abcdefghijklmnopqrstuvwxyz"
@@ -80,7 +99,7 @@ def text2imgpath(recognized_words):
 # set up server
 app = Flask(__name__)
 
-UPLOAD_FOLDER_VIDEO = './videos/'
+UPLOAD_FOLDER_VIDEO = '../img2text/VideoClassification/predict/test'
 UPLOAD_FOLDER_VOICE = './voice/'
 UPLOAD_FOLDER_IMAGE = './images/'
 ALLOWED_EXTENSIONS = {'mpg', 'mp4'}
@@ -143,7 +162,12 @@ def videofile():
         filename = "asl_video.mp4"
         filename = secure_filename(filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER_VIDEO'], filename))
-    return jsonify(status="success", text="blah")
+        time.sleep(1)
+        os.chdir("../img2text/VideoClassification")
+        predicted_str = train.test(extract_model, predict_model)
+        os.chdir("../../server")
+        print(predicted_str)
+    return jsonify(status="success", text=predicted_str[0])
 
 
 @app.route('/image', methods=['POST','GET'])
@@ -153,7 +177,13 @@ def image():
         filename = "asl_image.png"
         filename = secure_filename(filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER_IMAGE'], filename))
-    return jsonify(letter='H')
+        filepath = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER_IMAGE'], filename))
+        os.chdir("../img2text")
+        predict_letter = img_model.predict(filepath)
+        print(alphabet[int(np.argmax(predict_letter, axis=-1))])
+        letter = alphabet[int(np.argmax(predict_letter, axis=-1))]
+        os.chdir("../server")
+    return jsonify(letter=letter)
 
 @app.route('/api/upload', methods=['POST','GET'])
 def upload_file():

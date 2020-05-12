@@ -16,6 +16,9 @@
   border: 1px solid #ccc;
   background-color: #f1f1f1;
 }
+.letter {
+  font-family: 'comic-sans-ms'
+}
 
 /* Style the buttons inside the tab */
 .tab button {
@@ -129,14 +132,23 @@ function handleFiles() {
     console.log(formData);
     xhr(url + "videofile", formData, function (fName, req_body) {
       console.log(req_body);
+      var prev_cont = document.getElementById('text_predict');
+      if (prev_cont != null) {
+        //console.log(prev_cont);
+        prev_cont.remove();
+      }
+      var predict_text = document.createElement('h1');
+      predict_text.id = 'text_predict';
+      predict_text.innerHTML = req_body.text;
+      document.getElementById("Video file to Text").appendChild(predict_text);
     });
   }
 }
 
 var video_player = videojs("myVideo", {
   controls: true,
-  width: 720,
-  height: 540,
+  width: 600,
+  height: 600,
   fluid: false,
   plugins: {
     record: {
@@ -173,7 +185,7 @@ video_player.on('finishRecord', function() {
 var audio_player = videojs("myAudio", {
   controls: true,
   width: 600,
-  height: 300,
+  height: 600,
   fluid: false,
   plugins: {
     wavesurfer: {
@@ -229,6 +241,14 @@ audio_player.on('finishRecord', function() {
       var img_num = document.createElement('div');
       img_num.className = "number"
       var img = document.createElement('img');
+      var split_img = images[img_link].split('/')
+      console.log(split_img)
+      console.log(images[img_link])
+      console.log(split_img[split_img.length-1]);
+      var img_str = split_img[split_img.length-1];
+      var img_des = document.createElement('h4');
+      img_des.innerHTML = img_str.split('.png')[0];
+      img_container.appendChild(img_des);
       img.src = images[img_link];
       img_container.appendChild(img_num);
       img_container.appendChild(img);
@@ -241,8 +261,8 @@ audio_player.on('finishRecord', function() {
 
 var img_player = videojs("image", {
     controls: true,
-    width: 320,
-    height: 240,
+    width: 600,
+    height: 600,
     fluid: false,
     controlBar: {
         volumePanel: false,

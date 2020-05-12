@@ -1,8 +1,9 @@
-from keras.preprocessing import image
-from keras.applications.inception_v3 import InceptionV3, preprocess_input
-from keras.models import Model, load_model
-from keras.layers import Input
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.layers import Input
 import numpy as np
+import os
 
 class Extractor():
     def __init__(self, weights=None):

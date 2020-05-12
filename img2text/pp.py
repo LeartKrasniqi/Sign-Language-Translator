@@ -69,16 +69,15 @@ class Model(tf.Module):
     def load(self, weightpath):
         self.rnn.load_weights(weightpath)
 
-    def predict(self, testpath):
-        global images
-        im = cv2.imread("./Data/asl_alphabet_test/B/test_b.PNG")
-        print(np.shape(im))
+    def predict(self, imagepath):
+        images = []
+        im = cv2.imread(imagepath)
         #im = im / 1
-        images.append(im)
-        im = cv2.imread("./Data/asl_alphabet_test/L/L_test.jpg")
-        print(np.shape(im))
-        images.append(im)
-        images = np.reshape(images, [-1, 200, 200, 3])
+        print(imagepath)
+
+        img = cv2.resize(im,(200,200))
+        images.append(img)
+        images_array = np.reshape(images, [-1, 200, 200, 3])
         #im = np.expand_dims(im, -0)
         #test_gen = tf.keras.preprocessing.image.ImageDataGenerator()
         #test_data_gen = test_gen.flow_from_directory(batch_size=BATCH_SIZE, directory=testpath, shuffle=False, target_size=(256, 256))
@@ -94,13 +93,10 @@ class Model(tf.Module):
         im = cv2.resize(im, (256, 256))
         im = np.expand_dims(im, -0)
         '''
-        time1 = time.time()
-        output = self.rnn.predict(images)
+        output = self.rnn.predict(images_array)
 
-        time2 = time.time()
-        print(time2-time1)
         #true_label_ids = np.argmax(val_label_batch, axis=-1)
-        print(output)
+        return output
         # print(predictions)
         #print(true_label_ids)
 
@@ -120,8 +116,7 @@ class Model(tf.Module):
         '''
 
 
-model = Model()
-model.load("./checkpoints/cp-0050.ckpt")
+#model = Model()
+#model.load("./checkpoints/cp-0050.ckpt")
 #model.convert()
-#model.predict("./Data/asl_alphabet_test/")
-model.train("./Data/asl_alphabet_train/asl_alphabet_train/", "./Data/asl_alphabet_val/asl_alphabet_val/")
+#model.train("./Data/asl_alphabet_train/asl_alphabet_train/", "./Data/asl_alphabet_val/asl_alphabet_val/")

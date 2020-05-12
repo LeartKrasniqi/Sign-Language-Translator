@@ -34,14 +34,16 @@ def train(seq_length, saved_model=None, image_shape=None, batch_size=32, num_epo
     rm.model.fit(X, y, batch_size=batch_size, verbose=1, callbacks=[checkpointer], epochs=num_epoch)
     rm.model.save_weights('./checkpoints/my_checkpoint')
 
-def test():
+def test(extract_model, predict_model):
+    ret = []
+    print("Right function")
     create_images.extract_files(predict=1)
-    extract_features.extract_features(predict=1)
-    rm = Model(SEQUENCE_LEN, None)
-    rm.model.load_weights('./checkpoints/my_checkpoint')
+    extract_features.extract_features(predict=1, extract_model=extract_model)
+    # rm = Model(SEQUENCE_LEN, None)
+    # rm.model.load_weights('./checkpoints/my_checkpoint')
     data = DataSet(seq_length=SEQUENCE_LEN, image_shape=None, predict=1)
     X = data.get_predict_sequences_in_memory()
-    output = np.argmax(rm.model.predict(X), axis=-1)
+    output = np.argmax(predict_model.model.predict(X), axis=-1)
     indexFile = "./TrainTestlist/classInd.txt"
     map = open(indexFile, "r")
     lines = map.read().splitlines()
@@ -50,7 +52,9 @@ def test():
         tmp = line.split()
         dictionary[tmp[0]] = tmp[1]
     for decision in output:
+        ret.append(dictionary[str(int(decision) + 1)])
         print(dictionary[str(int(decision) + 1)])
+    return ret
 
 def main():
     saved_model = None  # None or weights file

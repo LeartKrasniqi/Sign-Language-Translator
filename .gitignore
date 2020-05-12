@@ -141,3 +141,7 @@ secrets/
 server/videos
 server/images
 server/voice
+*.csv
+img2text/VideoClassification/predict/test
+img2text/VideoClassification/predict_sequences
+checkpoints/

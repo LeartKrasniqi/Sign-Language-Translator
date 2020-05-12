@@ -21,12 +21,12 @@ from tqdm import tqdm
 seq_length = 40
 class_limit = 32  # Number of classes to extract. Can be 1-101 or None for all.
 
-def extract_features(predict=None):
+def extract_features(extract_model, predict=None):
     # Get the dataset.
     data = DataSet(seq_length=seq_length,predict=predict)
 
     # get the model.
-    model = Extractor()
+    model = extract_model
 
     # Loop through data.
     pbar = tqdm(total=len(data.data))
